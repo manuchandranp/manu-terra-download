@@ -12,7 +12,7 @@ permissions:
   contents: read
   id-token: write
 jobs:
-  publish-artifact:
+  download-artifact:
     runs-on: ubuntu-latest
     outputs:
       access_token: ${{ steps.exchange_token.outputs.ACCESS_TOKEN }}  # Set output for access token
