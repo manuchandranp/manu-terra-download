@@ -84,6 +84,34 @@ jobs:
           echo "machine hts2.jfrog.io login x password ${ACCESS_TOKEN}" > "${NETRC_PATH}"
           chmod 600 "${NETRC_PATH}"
           echo "TF_NETRC_PATH=${NETRC_PATH}" >> $GITHUB_ENV
+         # --- NEW STEP TO CREATE credentials.tfrc.json ---
+      - name: Configure Artifactory Credentials via tfrc.json
+        env:
+          ACCESS_TOKEN: ${{ needs.download-artifact.outputs.access_token }}
+          JFROG_HOST_DOMAIN: hts2.jfrog.io # The domain from your module source
+        run: |
+          # 1. Create the .terraform.d directory if it doesn't exist (Terraform standard location)
+          mkdir -p ~/.terraform.d
+          
+          # 2. Define the path to the credentials file
+          CREDENTIALS_FILE="$HOME/.terraform.d/credentials.tfrc.json"
+          
+          # 3. Create the JSON content, injecting the ACCESS_TOKEN
+          #    The 'hts2.jfrog.io' must exactly match the host in your module source.
+          cat << EOF > ${CREDENTIALS_FILE}
+          {
+            "credentials": {
+              "${{ env.JFROG_HOST_DOMAIN }}": {
+                "token": "${{ env.ACCESS_TOKEN }}"
+              }
+            }
+          }
+          EOF
+          
+          # Optional: Secure the file
+          chmod 600 "${CREDENTIALS_FILE}"
+          echo "Successfully configured Artifactory token in ${CREDENTIALS_FILE}"  
+          
 
       - name: Initialize Terraform
         # This step will use the TF_NETRC_PATH environment variable to find the credentials
