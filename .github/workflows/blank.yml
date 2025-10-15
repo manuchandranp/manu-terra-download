@@ -41,7 +41,38 @@ jobs:
         run: |
           ACCESS_TOKEN=$(curl -XPOST -H "Content-Type: application/json" "https://hts2.jfrog.io/access/api/v1/oidc/token" -d "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\", \"subject_token\": \"${ID_TOKEN}\", \"provider_name\": \"manu-new\"}" | jq .access_token | tr -d '"')
           echo "::set-output name=ACCESS_TOKEN::${ACCESS_TOKEN}"  # Pass the access token as output
-      - name: Download Terraform Module from Artifactory
-        # The JFrog CLI command to publish a module
+
+---
+
+  # New job to initialize Terraform and resolve modules from Artifactory
+  terraform-init-and-plan:
+    needs: download-artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0 # Specify your desired version
+
+      - name: Configure .netrc for Artifactory Access
+        # Uses the access token from the previous job's output
+        env:
+          ACCESS_TOKEN: ${{ needs.download-artifact.outputs.access_token }}
+          JFROG_HOST: ${{ env.JF_URL }} # e.g., https://hts2.jfrog.io
         run: |
-          jf rt dl manu-terra-virtual/vpc-aws-main.zip      
+          # Artifactory requires a .netrc entry for module resolution.
+          # Use the ACCESS_TOKEN as the password. The username can be anything (like 'x').
+          # The domain for the Artifactory API is typically 'hts2.jfrog.io'.
+          NETRC_PATH="${{ github.workspace }}/.netrc"
+          echo "machine hts2.jfrog.io login x password ${ACCESS_TOKEN}" > "${NETRC_PATH}"
+          chmod 600 "${NETRC_PATH}"
+          echo "TF_NETRC_PATH=${NETRC_PATH}" >> $GITHUB_ENV
+
+      - name: Initialize Terraform
+        # This step will use the TF_NETRC_PATH environment variable to find the credentials
+        # for downloading modules from the Artifactory module repository configured
+        # in your main Terraform code (e.g., source="hts2.jfrog.io/<repo-key>/module-name/aws").
+        run: terraform init
