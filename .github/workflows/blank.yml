@@ -70,20 +70,6 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0 # Specify your desired version
-
-      - name: Configure .netrc for Artifactory Access
-        # Uses the access token from the previous job's output
-        env:
-          ACCESS_TOKEN: ${{ needs.download-artifact.outputs.access_token }}
-          JFROG_HOST: ${{ env.JF_URL }} # e.g., https://hts2.jfrog.io
-        run: |
-          # Artifactory requires a .netrc entry for module resolution.
-          # Use the ACCESS_TOKEN as the password. The username can be anything (like 'x').
-          # The domain for the Artifactory API is typically 'hts2.jfrog.io'.
-          NETRC_PATH="${{ github.workspace }}/.netrc"
-          echo "machine hts2.jfrog.io login x password ${ACCESS_TOKEN}" > "${NETRC_PATH}"
-          chmod 600 "${NETRC_PATH}"
-          echo "TF_NETRC_PATH=${NETRC_PATH}" >> $GITHUB_ENV
          # --- NEW STEP TO CREATE credentials.tfrc.json ---
       - name: Configure Artifactory Credentials via tfrc.json
         env:
