@@ -73,4 +73,6 @@ jobs:
         # This step will use the TF_NETRC_PATH environment variable to find the credentials
         # for downloading modules from the Artifactory module repository configured
         # in your main Terraform code (e.g., source="hts2.jfrog.io/<repo-key>/module-name/aws").
-        run: terraform init
+        run: |
+           terraform init
+           pwd
