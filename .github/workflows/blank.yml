@@ -55,7 +55,6 @@ jobs:
           # Define the Terraform configuration directly in the workflow.
           # REPLACE <YOUR_REPO_KEY> with the actual repository key in Artifactory.
           cat << EOF > main.tf
-          terraform {
             module "aws" {
               source  = "hts2.jfrog.io/manu-terra-module__myorg/vpc/aws"
            }
