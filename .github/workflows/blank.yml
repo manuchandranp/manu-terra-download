@@ -49,6 +49,23 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+      # --- NEW STEP TO CREATE main.tf ---
+      - name: Create main.tf for Artifactory Module Source
+        run: |
+          # Define the Terraform configuration directly in the workflow.
+          # REPLACE <YOUR_REPO_KEY> with the actual repository key in Artifactory.
+          cat << EOF > main.tf
+          terraform {
+            module "module-name" {
+              source  = "hts2.jfrog.io/manu-terra-module__myorg/vpc/aws"
+           }
+
+          }
+          EOF
+          
+          # Optional: Print the file content for debugging
+          echo "--- main.tf content ---"
+          cat main.tf  
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
